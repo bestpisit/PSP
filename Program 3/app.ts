@@ -1,21 +1,16 @@
 //########################################################################
-//# Program Assignment: Program 3                                        #
+//# Program Assignment: Program 4                                        #
 //# Name: Pisit Pisuttipunpong 640615023                                 #
-//# Date: 2024-11-28                                                     #
-//# Description: Linear Regression for predict Y from X                  #
+//# Date: 2024-12-11                                                     #
+//# Description: Calculate Relative Size Range                           #
 //########################################################################
 
-import * as readline from 'readline/promises';
+const dataset1 = [{ "Class Name": "each_char", "Class LOC": 18, "Number of Methods": 3 }, { "Class Name": "string_read", "Class LOC": 18, "Number of Methods": 3 }, { "Class Name": "single_character", "Class LOC": 25, "Number of Methods": 3 }, { "Class Name": "each_line", "Class LOC": 31, "Number of Methods": 3 }, { "Class Name": "single_char", "Class LOC": 37, "Number of Methods": 3 }, { "Class Name": "string_builder", "Class LOC": 82, "Number of Methods": 5 }, { "Class Name": "string_manager", "Class LOC": 82, "Number of Methods": 4 }, { "Class Name": "list_clump", "Class LOC": 87, "Number of Methods": 4 }, { "Class Name": "list_clip", "Class LOC": 89, "Number of Methods": 4 }, { "Class Name": "string_decrementer", "Class LOC": 230, "Number of Methods": 10 }, { "Class Name": "Char", "Class LOC": 85, "Number of Methods": 3 }, { "Class Name": "Character", "Class LOC": 87, "Number of Methods": 3 }, { "Class Name": "Converter", "Class LOC": 558, "Number of Methods": 10 }];
+const dataset2 = [{ "Chapter": "Preface", "Pages": 7 }, { "Chapter": "Chapter 1", "Pages": 12 }, { "Chapter": "Chapter 2", "Pages": 10 }, { "Chapter": "Chapter 3", "Pages": 12 }, { "Chapter": "Chapter 4", "Pages": 10 }, { "Chapter": "Chapter 5", "Pages": 12 }, { "Chapter": "Chapter 6", "Pages": 12 }, { "Chapter": "Chapter 7", "Pages": 12 }, { "Chapter": "Chapter 8", "Pages": 12 }, { "Chapter": "Chapter 9", "Pages": 12 }, { "Chapter": "Appendix A", "Pages": 8 }, { "Chapter": "Appendix B", "Pages": 8 }, { "Chapter": "Appendix C", "Pages": 8 }, { "Chapter": "Appendix D", "Pages": 20 }, { "Chapter": "Appendix E", "Pages": 14 }, { "Chapter": "Appendix F", "Pages": 18 }];
 
 function clearScreen() {
     process.stdout.write('\x1Bc');
 }
-
-//  4 Test Cases
-//  1 2       Estimated Proxy Size = 130 650 99 150 128 302 95 945 368 961
-//      3 4   Plan Added and Modified Size = 163 765 141 166 137 355 136 1206 433 1130
-//  1   3     Actual Added and Modified Size = 186 699 132 272 291 331 199 1890 788 1601
-//    2   4   Actual Development Hours = 15.0 69.9 6.5 22.4 28.4 65.9 19.4 198.7 38.8 138.2
 
 const calculateMean = (numberList: number[]): number => { // #added_line
     return numberList.reduce((a, c) => a + c, 0) / numberList.length; // #added_line
@@ -26,145 +21,44 @@ const calculateSD = (numberList: number[], mean: number): number => { // #added_
     return Math.sqrt(numberList.map(num => Math.pow(num - mean, 2)).reduce((a, c) => a + c, 0) / (numberList.length - 1)); // #added_line
 } // #added_line
 
-const calculateB1 = (numberList1: number[], numberList2: number[]): number => { // #added_line
-    const mean1 = calculateMean(numberList1); // #added_line
-    const mean2 = calculateMean(numberList2); // #added_line
-    const sumXY = numberList1.map((num1, i) => num1 * numberList2[i]).reduce((a, c) => a + c, 0); // #added_line
-    const sumX2 = numberList1.map(num => num * num).reduce((a, c) => a + c, 0); // #added_line
-    return (sumXY - numberList1.length * mean1 * mean2) / (sumX2 - numberList1.length * mean1 * mean1); // #added_line
-} // #added_line
+const calculateLogRange = (avg: number, sd: number): number[] => {
+    return [
+        avg - 2 * sd,
+        avg - sd,
+        avg,
+        avg + sd,
+        avg + 2 * sd
+    ]
+}
 
-const calculateB0 = (numberList1: number[], numberList2: number[]): number => { // #added_line
-    const B1 = calculateB1(numberList1, numberList2); // #added_line
-    return calculateMean(numberList2) - B1 * calculateMean(numberList1); // #added_line
-} // #added_line
-
-const calculateR = (numberList1: number[], numberList2: number[]): number => { // #added_line
-    const n = numberList1.length; // #added_line
-    const sumX = numberList1.reduce((a, c) => a + c, 0); // #added_line
-    const sumY = numberList2.reduce((a, c) => a + c, 0); // #added_line
-    const sumXY = numberList1.map((num1, i) => num1 * numberList2[i]).reduce((a, c) => a + c, 0); // #added_line
-    const sumX2 = numberList1.map(num => num * num).reduce((a, c) => a + c, 0); // #added_line
-    const sumY2 = numberList2.map(num => num * num).reduce((a, c) => a + c, 0); // #added_line
-
-    const top = n * sumXY - sumX * sumY; // #added_line
-    const bottom = Math.sqrt((n * sumX2 - Math.pow(sumX, 2)) * (n * sumY2 - Math.pow(sumY, 2))); // #added_line
-
-    return top / bottom; // #added_line
-} // #added_line
-
-const getInputSingleLine = async (rl: readline.Interface, question: string): Promise<number[]> => { // #added_line
-    const inputLine = await rl.question(question); // #added_line
-
-    return inputLine // #added_line
-        .trim() // #added_line
-        .split(/\s+/) // #added_line
-        .map((num) => parseFloat(num) || 0); // #added_line
-}; // #added_line
+const antiLogarithm = (number: number): number => {
+    return Math.exp(number);
+}
 
 async function main() {
-    // Create readline input interface
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
     clearScreen();
 
-    //delete_line const numberCount = parseInt(await rl.question('How many numbers ? : ')) || 0;
-    //delete_line console.log(`Please input ${numberCount} numbers.`);
+    const data = [
+        dataset1.map(d => d["Class LOC"] / d["Number of Methods"]),
+        dataset2.map(d => d["Pages"])
+    ];
 
-    const EstimatedProxySize = [130, 650, 99, 150, 128, 302, 95, 945, 368, 961]; // #added_line
-    const PlanAddedandModifiedSize = [163, 765, 141, 166, 137, 355, 136, 1206, 433, 1130]; // #added_line
-    const ActualAddedandModifiedSize = [186, 699, 132, 272, 291, 331, 199, 1890, 788, 1601]; // #added_line
-    const ActualDevelopmentHours = [15.0, 69.9, 6.5, 22.4, 28.4, 65.9, 19.4, 198.7, 38.8, 138.2]; // #added_line
+    for (let currentData of data) {
+        const currentDataLn = currentData.map(d => Math.log(d));
+        const currentDataAvg = calculateMean(currentDataLn);
+        const currentDataSD = calculateSD(currentDataLn, currentDataAvg);
+        const currentDataVariance = Math.pow(currentDataSD, 2);
+        const logRange = calculateLogRange(currentDataAvg, currentDataSD);
+        const relativeSize = logRange.map(rsr=>antiLogarithm(rsr));
 
-    console.log("Test Case 1"); // #added_line
-    const x_test_1 = 386; // #added_line
-    const b1_1 = calculateB1(EstimatedProxySize, ActualAddedandModifiedSize); // #added_line
-    const b0_1 = calculateB0(EstimatedProxySize, ActualAddedandModifiedSize); // #added_line
-    const r_1 = calculateR(EstimatedProxySize, ActualAddedandModifiedSize); // #added_line
-    const r2_1 = Math.pow(r_1,2); // #added_line
-    const y_1 = b0_1 + b1_1 * x_test_1; // #added_line
-    console.log(`B0 value = ${b0_1.toFixed(4)}`); // #added_line
-    console.log(`B1 value = ${b1_1.toFixed(4)}`); // #added_line
-    console.log(`R value = ${r_1.toFixed(4)}`); // #added_line
-    console.log(`R^2 value = ${r2_1.toFixed(4)}`); // #added_line
-    console.log(`Predicted Y value = ${y_1.toFixed(4)}`); // #added_line
-
-    console.log(""); // #added_line
-    console.log("=================================================") // #added_line
-    console.log(""); // #added_line
-
-    console.log("Test Case 2"); // #added_line
-    const x_test_2 = 386; // #added_line
-    const b1_2 = calculateB1(EstimatedProxySize, ActualDevelopmentHours); // #added_line
-    const b0_2 = calculateB0(EstimatedProxySize, ActualDevelopmentHours); // #added_line
-    const r_2 = calculateR(EstimatedProxySize, ActualDevelopmentHours); // #added_line
-    const r2_2 = Math.pow(r_2,2); // #added_line
-    const y_2 = b0_2 + b1_2 * x_test_2; // #added_line
-    console.log(`B0 value = ${b0_2.toFixed(4)}`); // #added_line
-    console.log(`B1 value = ${b1_2.toFixed(4)}`); // #added_line
-    console.log(`R value = ${r_2.toFixed(4)}`); // #added_line
-    console.log(`R^2 value = ${r2_2.toFixed(4)}`); // #added_line
-    console.log(`Predicted Y value = ${y_2.toFixed(4)}`); // #added_line
-
-    console.log(""); // #added_line
-    console.log("=================================================") // #added_line
-    console.log(""); // #added_line
-
-    console.log("Test Case 3"); // #added_line
-    const x_test_3 = 386; // #added_line
-    const b1_3 = calculateB1(PlanAddedandModifiedSize, ActualAddedandModifiedSize); // #added_line
-    const b0_3 = calculateB0(PlanAddedandModifiedSize, ActualAddedandModifiedSize); // #added_line
-    const r_3 = calculateR(PlanAddedandModifiedSize, ActualAddedandModifiedSize); // #added_line
-    const r2_3 = Math.pow(r_3,2); // #added_line
-    const y_3 = b0_3 + b1_3 * x_test_3; // #added_line
-    console.log(`B0 value = ${b0_3.toFixed(4)}`); // #added_line
-    console.log(`B1 value = ${b1_3.toFixed(4)}`); // #added_line
-    console.log(`R value = ${r_3.toFixed(4)}`); // #added_line
-    console.log(`R^2 value = ${r2_3.toFixed(4)}`); // #added_line
-    console.log(`Predicted Y value = ${y_3.toFixed(4)}`); // #added_line
-
-    console.log(""); // #added_line
-    console.log("=================================================") // #added_line
-    console.log(""); // #added_line
-
-    console.log("Test Case 4"); // #added_line
-    const x_test_4 = 386; // #added_line
-    const b1_4 = calculateB1(PlanAddedandModifiedSize, ActualDevelopmentHours); // #added_line
-    const b0_4 = calculateB0(PlanAddedandModifiedSize, ActualDevelopmentHours); // #added_line
-    const r_4 = calculateR(PlanAddedandModifiedSize, ActualDevelopmentHours); // #added_line
-    const r2_4 = Math.pow(r_4,2); // #added_line
-    const y_4 = b0_4 + b1_4 * x_test_4; // #added_line
-    console.log(`B0 value = ${b0_4.toFixed(4)}`); // #added_line
-    console.log(`B1 value = ${b1_4.toFixed(4)}`); // #added_line
-    console.log(`R value = ${r_4.toFixed(4)}`); // #added_line
-    console.log(`R^2 value = ${r2_4.toFixed(4)}`); // #added_line
-    console.log(`Predicted Y value = ${y_4.toFixed(4)}`); // #added_line
-
-    //delete_line let mean = 0.0;
-
-    //delete_line for(let i=0;i<numberCount;i++){
-    //delete_line const inputNumber = parseFloat(await rl.question(`Number ${i+1} : `)) || 0;
-    //delete_line numberList.push(inputNumber);
-    //delete_line mean += inputNumber;
-    //delete_line }
-
-    //calculate mean of numbers
-
-    //delete_line mean /= numberCount;
-
-    //delete_line const sumSD = numberList.map(num=>Math.pow(num-mean,2)).reduce((a,c)=>a+c,0) as number;
-
-    //delete_line const SD = Math.sqrt((sumSD/(numberCount-1)));
-
-    //delete_line console.log("======== Summary ========")
-
-    //delete_line console.log("Mean : "+mean.toFixed(2));
-
-    //delete_line console.log("Standard Deviation : "+SD.toFixed(2));
-
-    rl.close();
+        console.log("VS: ", relativeSize[0].toFixed(4));
+        console.log("S: ", relativeSize[1].toFixed(4));
+        console.log("M: ", relativeSize[2].toFixed(4));
+        console.log("L: ", relativeSize[3].toFixed(4));
+        console.log("VL: ", relativeSize[4].toFixed(4));
+        console.log("");
+        console.log("######################################")
+    }
 }
 
 main();
