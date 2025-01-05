@@ -1,9 +1,9 @@
 "use strict";
 //########################################################################
-//# Program Assignment: Program 5                                        #
+//# Program Assignment: Program 6                                        #
 //# Name: Pisit Pisuttipunpong 640615023                                 #
-//# Date: 2024-12-19                                                     #
-//# Description: Numerical Integral of T Distribution                    #
+//# Date: 2025-1-5                                                       #
+//# Description: Binary Search                                           #
 //########################################################################
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -39,7 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const readline = __importStar(require("readline/promises"));
-const E = 0.00001;
+const E = 0.000001;
 //Part: Function
 function clearScreen() {
     process.stdout.write('\x1Bc');
@@ -64,6 +64,52 @@ function simpson_function(w, num_seg, x, dof) {
     }
     return sumF * w / 3;
 }
+//Part find P
+function find_p_function(x, dof) {
+    let num_seg = 10;
+    let prev_p = 0;
+    let current_p = 0;
+    let w = x / num_seg;
+    //Part: Simpson logic
+    do {
+        prev_p = current_p;
+        w = x / num_seg;
+        current_p = simpson_function(w, num_seg, x, dof);
+        num_seg *= 2;
+    } while (current_p - prev_p > E);
+    return current_p;
+}
+var State;
+(function (State) {
+    State[State["greater"] = 0] = "greater";
+    State[State["lower"] = 1] = "lower";
+    State[State["null"] = 2] = "null";
+})(State || (State = {}));
+// Part Binary Search
+function binary_search(p, dof) {
+    let x = 1.;
+    let D = x / 2;
+    let p_x = find_p_function(x, dof);
+    let previous_state = State.null; // gt = Greater, lt = Lower, null = No state
+    while (Math.abs(p_x - p) > E) {
+        if (p_x > p) {
+            if (previous_state === State.lower) {
+                D /= 2;
+            }
+            x -= D;
+            previous_state = State.greater;
+        }
+        else {
+            if (previous_state === State.greater) {
+                D /= 2;
+            }
+            x += D;
+            previous_state = State.lower;
+        }
+        p_x = find_p_function(x, dof);
+    }
+    return x;
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         clearScreen();
@@ -72,22 +118,12 @@ function main() {
             output: process.stdout,
         });
         //Part: Setup Simpson
-        const x = parseFloat(yield rl.question('Enter x: ')) || 0;
-        const dof = parseFloat(yield rl.question('Enter degree of freedom: ')) || 0;
-        let num_seg = 10;
-        let prev_p = 0;
-        let current_p = 0;
-        let w = x / num_seg;
+        for (let i = 0; i < 3; i++) {
+            const p = parseFloat(yield rl.question('Enter expected p: ')) || 0;
+            const dof = parseFloat(yield rl.question('Enter degree of freedom: ')) || 0;
+            console.log("Expected X: ", binary_search(p, dof).toFixed(5));
+        }
         rl.close();
-        //Part: Simpson logic
-        do {
-            prev_p = current_p;
-            w = x / num_seg;
-            current_p = simpson_function(w, num_seg, x, dof);
-            num_seg *= 2;
-        } while (current_p - prev_p > E);
-        // console.log(`Number of Segments: ${num_seg}`);
-        console.log(`Simpson's Value: ${current_p.toFixed(5)}`);
     });
 }
 main();

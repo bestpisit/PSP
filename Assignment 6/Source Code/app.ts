@@ -1,12 +1,12 @@
 //########################################################################
 //# Program Assignment: Program 6                                        #
 //# Name: Pisit Pisuttipunpong 640615023                                 #
-//# Date: 2024-12-19                                                     #
-//# Description: Numerical Integral of T Distribution                    #
+//# Date: 2025-1-5                                                       #
+//# Description: Binary Search                                           #
 //########################################################################
 
 import * as readline from 'readline/promises';
-const E = 0.00001;
+const E = 0.000001;
 
 //Part: Function
 function clearScreen() {
@@ -34,20 +34,12 @@ function simpson_function(w: number, num_seg: number, x: number, dof: number) {
     return sumF * w / 3;
 }
 
-async function main() {
-    clearScreen();
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-    //Part: Setup Simpson
-    const x = parseFloat(await rl.question('Enter x: ')) || 0;
-    const dof = parseFloat(await rl.question('Enter degree of freedom: ')) || 0;
+//Part find P
+function find_p_function(x: number, dof: number) {
     let num_seg = 10;
     let prev_p = 0;
     let current_p = 0;
     let w = x / num_seg;
-    rl.close();
 
     //Part: Simpson logic
     do {
@@ -57,8 +49,52 @@ async function main() {
         num_seg *= 2;
     }
     while (current_p - prev_p > E);
-    // console.log(`Number of Segments: ${num_seg}`);
-    console.log(`Simpson's Value: ${current_p.toFixed(5)}`);
+    return current_p;
 }
 
+enum State {
+    greater,
+    lower,
+    null
+}
+
+// Part Binary Search
+function binary_search(p: number, dof: number) {
+    let x = 1.;
+    let D = x / 2;
+    let p_x = find_p_function(x, dof);
+    let previous_state: State = State.null; // gt = Greater, lt = Lower, null = No state
+    while (Math.abs(p_x - p) > E) {
+        if (p_x > p) {
+            if (previous_state === State.lower) {
+                D /= 2;
+            }
+            x -= D;
+            previous_state = State.greater;
+        } else {
+            if (previous_state === State.greater) {
+                D /= 2;
+            }
+            x += D;
+            previous_state = State.lower;
+        }
+        p_x = find_p_function(x, dof);
+    }
+    return x;
+}
+async function main() {
+    clearScreen();
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+    //Part: Setup Simpson
+    for (let i = 0; i < 3; i++) {
+        const p = parseFloat(await rl.question('Enter expected p: ')) || 0;
+        const dof = parseFloat(await rl.question('Enter degree of freedom: ')) || 0;
+        console.log("Expected X: ", binary_search(p, dof).toFixed(5));
+    }
+
+    rl.close();
+}
 main();
